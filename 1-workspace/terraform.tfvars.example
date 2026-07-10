@@ -1,0 +1,9 @@
+subscription_id      = "00000000-0000-0000-0000-000000000000"
+resource_group_name  = "rg-databricks-lakewatch"
+location             = "centralindia"
+prefix               = "clbl-lw"
+workspace_name       = "clbl-lakewatch-poc"
+storage_account_name = "clbllakewatchtel01" # must be globally unique, 3-24 lowercase alphanumeric
+
+# storage_replication_type = "LRS"   # uncomment if your region does not support ZRS
+# public_network_access_enabled = true

@@ -1,0 +1,4 @@
+# Copy to backend.hcl and fill in — same state storage account as Stage 1.
+resource_group_name  = "rg-tfstate"
+storage_account_name = "<your existing state SA>"
+container_name       = "tfstate"

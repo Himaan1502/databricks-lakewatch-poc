@@ -1,0 +1,4 @@
+# Copy to backend.hcl and fill in — reuse your existing Terraform state storage account.
+resource_group_name  = "rg-tfstate"
+storage_account_name = "<your existing state SA>"
+container_name       = "tfstate"

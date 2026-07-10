@@ -1,0 +1,27 @@
+# ---- Terraform ----
+# State contains secrets in plaintext – NEVER commit it.
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+
+# Provider plugins / lock dirs
+.terraform/
+# optional: remove the next line to commit the lock file and pin provider hashes in CI
+.terraform.lock.hcl
+
+# Variable / backend files (may contain subscription ids, account names); keep .example files
+terraform.tfvars
+*.auto.tfvars
+backend.hcl
+
+# Plan artifacts
+*.tfplan
+tfplan
+
+# ---- OS / editor noise ----
+.DS_Store
+*.swp
+.idea/
+.vscode/

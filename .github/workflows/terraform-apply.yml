@@ -1,0 +1,89 @@
+name: terraform-apply
+
+# Manual apply/destroy, gated by the protected `azure-poc` environment (reuse the
+# same environment as the observability pipeline). Applies stage 1 -> stage 2;
+# destroys in reverse. Auth: the SAME SPN via ARM_* env vars (client-secret).
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action"
+        required: true
+        default: apply
+        type: choice
+        options: [apply, destroy]
+
+permissions:
+  contents: read
+
+env:
+  ARM_CLIENT_ID:          ${{ vars.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET:      ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_TENANT_ID:          ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID:    ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: azure-poc   # protected environment -> manual approval gate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      # ---------------- APPLY: stage 1 -> stage 2 ----------------
+      - name: Apply workspace (stage 1)
+        if: ${{ inputs.action == 'apply' }}
+        working-directory: 1-workspace
+        env:
+          TF_VAR_storage_account_name: ${{ vars.LW_STORAGE_ACCOUNT_NAME }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_SA }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}"
+          terraform apply -input=false -auto-approve
+
+      - name: Apply unity catalog (stage 2)
+        if: ${{ inputs.action == 'apply' }}
+        working-directory: 2-unity-catalog
+        env:
+          TF_VAR_state_resource_group_name:  ${{ vars.TF_STATE_RG }}
+          TF_VAR_state_storage_account_name: ${{ vars.TF_STATE_SA }}
+          TF_VAR_state_container_name:       ${{ vars.TF_STATE_CONTAINER }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_SA }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}"
+          terraform apply -input=false -auto-approve
+
+      # ---------------- DESTROY: stage 2 -> stage 1 ----------------
+      - name: Destroy unity catalog (stage 2)
+        if: ${{ inputs.action == 'destroy' }}
+        working-directory: 2-unity-catalog
+        env:
+          TF_VAR_state_resource_group_name:  ${{ vars.TF_STATE_RG }}
+          TF_VAR_state_storage_account_name: ${{ vars.TF_STATE_SA }}
+          TF_VAR_state_container_name:       ${{ vars.TF_STATE_CONTAINER }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_SA }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}"
+          terraform destroy -input=false -auto-approve
+
+      - name: Destroy workspace (stage 1)
+        if: ${{ inputs.action == 'destroy' }}
+        working-directory: 1-workspace
+        env:
+          TF_VAR_storage_account_name: ${{ vars.LW_STORAGE_ACCOUNT_NAME }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_SA }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER }}"
+          terraform destroy -input=false -auto-approve

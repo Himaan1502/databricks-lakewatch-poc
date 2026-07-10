@@ -1,0 +1,4 @@
+# Coordinates of the remote state that holds Stage 1's outputs (same state SA as Stage 1).
+state_resource_group_name  = "rg-tfstate"
+state_storage_account_name = "<your existing state SA>"
+state_container_name       = "tfstate"
