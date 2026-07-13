@@ -67,7 +67,7 @@ These are Lakewatch prerequisites that live in settings, not Terraform:
 Get it from the account console at **accounts.azuredatabricks.net** — click your
 profile (top right); the account ID is shown there. Include it in the email.
 
-## Details to send Ashish (map to `terraform output`)
+## Details (map to `terraform output`)
 - Databricks Account ID — from the account console (above)
 - Workspace name — `workspace_name`
 - Workspace URL — `workspace_url`
