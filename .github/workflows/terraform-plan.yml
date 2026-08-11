@@ -9,6 +9,7 @@ name: terraform-plan
 # succeeds AFTER stage 1 has been applied at least once via terraform-apply.
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '1-workspace/**'
